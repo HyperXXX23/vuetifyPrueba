@@ -8,17 +8,16 @@
   >
     <template v-slot:top>
       <v-toolbar flat>
-        <v-toolbar-title>Categoria 1 Nombre</v-toolbar-title>
+        <v-toolbar-title>Categoria 1</v-toolbar-title>
         <v-toolbar-title class="text-right mr-14">
           {{ `${totalSum} €` }}
         </v-toolbar-title>
       </v-toolbar>
     </template>
     <template v-slot:expanded-row="{ columns, item }">
-      <tr v-for="el in item.nestedItems" :key="el.id">
-        <td class="pl-10" :colspan="columns.length / 2">{{ el.name }}</td>
-        <td class="text-right" :colspan="columns.length / 2">
-          {{ `${el.value} €` }}
+      <tr>
+        <td :colspan="columns.length">
+          <TableCompNest :itemData="item.nestedItems" />
         </td>
       </tr>
     </template>
@@ -68,47 +67,122 @@ const items = ref([
   {
     id: "001",
     nameCat: "Cat1.1",
+    value: 0,
     nestedItems: [
       {
-        name: "Concepto 1",
-        value: 534,
+        name: "Concepto 1.1",
+        value: 0,
+        moreNestedItems: [
+          {
+            name: "Subconcepto 1.1.1",
+            value: 450,
+          },
+          {
+            name: "Subconcepto 1.1.2",
+            value: 239,
+          },
+        ],
       },
       {
-        name: "Concepto 2",
-        value: 200,
+        name: "Concepto 1.2",
+        value: 0,
+        moreNestedItems: [
+          {
+            name: "Subconcepto 1.2.1",
+            value: 450,
+          },
+          {
+            name: "Subconcepto 1.2.2",
+            value: 239,
+          },
+        ],
       },
     ],
   },
   {
     id: "002",
     nameCat: "Cat1.2",
+    value: 0,
     nestedItems: [
       {
-        name: "Concepto 3",
-        value: 431,
-      },
-      {
-        name: "Concepto 4",
-        value: 225,
+        name: "Concepto 2",
+        value: 0,
+        moreNestedItems: [
+          {
+            name: "Subconcepto 2.1.1",
+            value: 352,
+          },
+          {
+            name: "Subconcepto 2.1.2",
+            value: 467,
+          },
+        ],
       },
     ],
   },
   {
     id: "003",
     nameCat: "Cat1.3",
+    value: 0,
     nestedItems: [
       {
-        name: "Concepto 5",
-        value: 632,
+        name: "Concepto 3.1",
+        value: 0,
+        moreNestedItems: [
+          {
+            name: "Subconcepto 3.1.1",
+            value: 250,
+          },
+          {
+            name: "Subconcepto 3.1.2",
+            value: 284,
+          },
+        ],
       },
       {
-        name: "Concepto 6",
-        value: 153,
+        name: "Concepto 3.2",
+        value: 0,
+        moreNestedItems: [
+          {
+            name: "Subconcepto 3.2.1",
+            value: 250,
+          },
+          {
+            name: "Subconcepto 3.2.2",
+            value: 284,
+          },
+          {
+            name: "Subconcepto 3.3.3",
+            value: 684,
+          },
+        ],
       },
     ],
   },
 ]);
 
+//Actualiza el value de nestedItem con la suma de los valores de la parde baja del arbol
+const updateNestedItems = (items) => {
+  items.forEach((item) => {
+    item.nestedItems.forEach((nestedItem) => {
+      nestedItem.value = nestedItem.moreNestedItems.reduce(
+        (sum, moreNestedItem) => sum + moreNestedItem.value,
+        0
+      );
+    });
+  });
+};
+
+//Actualiza el value de cada item con la suma de todos los values de nestedItem
+const updateValueItems = (items) => {
+  items.forEach((item) => {
+    item.value = item.nestedItems.reduce(
+      (sum, nestedItem) => sum + nestedItem.value,
+      0
+    );
+  });
+};
+//uso un watcher para asegurarme que cuando el valor de la propiedad money se actualize me calcule el total
 watch(
   () => items.value,
   () => {
@@ -119,24 +193,18 @@ watch(
 const totalSum = ref(0);
 
 onMounted(() => {
-  // Calcular y asignar la propiedad 'money' para cada elemento en 'items'
-  items.value = items.value.map((item) => {
-    const money = item.nestedItems.reduce(
-      (sum, nestedItem) => sum + nestedItem.value,
-      0
-    );
-    return { ...item, money: `${money} €` };
-  });
-  //const totalSum = sumaMoney(items.value);
+  // Calcular y asignar la propiedad 'money' para cada elemento en 'items'\
+  updateNestedItems(items.value);
+  updateValueItems(items.value);
+
+  if (Array.isArray(items.value)) {
+    items.value = items.value.map((item) => {
+      const money = item.nestedItems.reduce(
+        (sum, nestedItem) => sum + nestedItem.value,
+        0
+      );
+      return { ...item, money: `${money} €` };
+    });
+  }
 });
-
-//uso un watcher para asegurarme que cuando el valor de la propiedad money se actualize me calcule el total
 </script>
-
-<style>
-.prueba {
-  color: brown;
-  font-size: 20px;
-  border: 2px solid red;
-}
-</style>
